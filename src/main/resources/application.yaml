@@ -1,6 +1,6 @@
 server:
   port: 8082
-
+## DATABASE CONFIG
 spring:
   datasource:
     username: ${DB_USERNAME:root}
@@ -16,7 +16,7 @@ spring:
       hibernate:
         format_sql: true
         use_sql_comments: true
-
+  ### EMAIL CONFIG
   mail:
     port: 465
     host:
@@ -32,6 +32,15 @@ spring:
           required: true
         ssl:
           enable: true
+
+  #### KAFKA CONFIG
+  kafka:
+    bootstrap-servers: localhost:19092
+    consumer:
+      group-id: otp-group-id
+      auto-offset-reset: earliest
+      enable-auto-commit: true
+
 #####
 email:
   from: anonystick@gmail.com
