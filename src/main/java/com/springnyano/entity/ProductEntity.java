@@ -6,6 +6,8 @@ import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
 import java.math.BigDecimal;
+import java.util.List;
+
 @Entity
 @Getter
 @Setter
@@ -23,4 +25,12 @@ public class ProductEntity {
     private String productName;
     private BigDecimal productPrice;
 
+
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "java_product_order_001",
+            joinColumns = @JoinColumn(name = "product_id"),
+            inverseJoinColumns = @JoinColumn(name = "order_id")
+    )
+    private List<OrderEntity> orderList;
 }
