@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class EmailSenderUtil {
-    private static final String EMAIL_HOST = "anonystick@gmail.com";
+    private static final String EMAIL_HOST = "nguyenhoanghai@vietbank.com.vn";
     @Autowired
     private JavaMailSender mailSender;
 
