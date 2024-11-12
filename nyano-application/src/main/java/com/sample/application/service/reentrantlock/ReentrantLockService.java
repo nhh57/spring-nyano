@@ -20,7 +20,7 @@ public class ReentrantLockService {// Lưu trữ các khóa cho từng lệnh du
         if (lock.tryLock()) {
             try {
                 // Xử lý lệnh duyệt
-                Thread.sleep(5000); // Giả lập xử lý mất 2 giây
+                Thread.sleep(1000); // Giả lập xử lý mất 2 giây
                 return "Đã xử lý lệnh duyệt: " + approvalId;
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();

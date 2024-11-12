@@ -1,4 +1,4 @@
-package com.sample.controller.resource;
+package com.sample.controller.http;
 
 import com.sample.application.service.event.EventAppService;
 import com.sample.application.service.event.EventAppServiceRedis;

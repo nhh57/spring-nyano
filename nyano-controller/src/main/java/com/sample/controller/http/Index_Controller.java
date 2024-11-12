@@ -1,16 +1,19 @@
-package com.sample.controller.resource;
+package com.sample.controller.http;
 
 import com.sample.application.service.event.EventAppService;
 import com.sample.application.service.event.EventAppServiceRedis;
-import com.sample.application.cache.impl.RedisCache;
 import com.sample.application.service.reentrantlock.ReentrantLockService;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
 
+import java.security.SecureRandom;
 import java.util.concurrent.TimeUnit;
 
 @RestController
@@ -18,20 +21,22 @@ import java.util.concurrent.TimeUnit;
 public class Index_Controller {
     private final EventAppService eventAppService;
     private final EventAppServiceRedis eventAppServiceRedis;
-    private final RedisCache redisCache;
     private final RedissonClient redissonClient;
     private final ReentrantLockService processApproval;
+    private final RestTemplate restTemplate;
+    private static final SecureRandom secureRandom = new SecureRandom();
 
     public Index_Controller(EventAppService eventAppService, EventAppServiceRedis eventAppServiceRedis,
-                            RedisCache redisCache, RedissonClient redissonClient, ReentrantLockService processApproval) {
+                            RedissonClient redissonClient, ReentrantLockService processApproval, RestTemplate restTemplate) {
         this.eventAppService = eventAppService;
         this.eventAppServiceRedis = eventAppServiceRedis;
-        this.redisCache = redisCache;
         this.redissonClient = redissonClient;
         this.processApproval = processApproval;
+        this.restTemplate = restTemplate;
     }
 
     @GetMapping("/distributed")
+    @RateLimiter(name = "backendB", fallbackMethod = "fallbackHello")
     public String index() {
         Object key = "hainh";
         String data = (String) eventAppServiceRedis.getSayHiRedis(key);
@@ -45,7 +50,7 @@ public class Index_Controller {
         boolean isLocked = false;
         try {
             // Thử lấy khóa với thời gian chờ 1 giây và giữ khóa trong tối đa 30 giây
-            isLocked = lock.tryLock(1, 30, TimeUnit.SECONDS);
+            isLocked = lock.tryLock(1, 3, TimeUnit.SECONDS);
             if (isLocked) {
                 // Kiểm tra lại trong Redis để tránh truy cập database không cần thiết
                 data = (String) eventAppServiceRedis.getSayHiRedis(key);
@@ -73,9 +78,26 @@ public class Index_Controller {
 
 
     @GetMapping("/{approvalId}")
+    @RateLimiter(name = "backendA", fallbackMethod = "fallbackHello")
     public String approve(@PathVariable String approvalId) {
         String response = processApproval.processApproval(approvalId);
         System.out.println("response ::%s" + response);
         return response;
+    }
+
+    public String fallbackHello(Throwable throwable) {
+        return "Too many requests.";
+    }
+
+    @GetMapping("/circuit/breaker")
+    @CircuitBreaker(name = "checkRandom", fallbackMethod = "fallbackCircuitBreaker")
+    public String circuitBreaker() {
+        int productId = secureRandom.nextInt(20) + 1;
+        String url = "https://fakestoreapi.com/products/" + productId;
+        return restTemplate.getForObject(url, String.class);
+    }
+
+    public String fallbackCircuitBreaker(Throwable throwable) {
+        return "Service fakestoreapi Error ";
     }
 }

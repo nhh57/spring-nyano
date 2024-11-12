@@ -1,5 +1,46 @@
 server:
   port: 1122
+  tomcat:
+    threads:
+      max: 10 #
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      checkRandom:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        permittedNumberOfCallsInHalfOpenState: 3
+        #        slidingWindowType: TIME_BASED
+        minimumNumberOfCalls: 5
+        waitDurationInOpenState: 5s
+        failureRateThreshold: 50
+        eventConsumerBufferSize: 10
+
+  ratelimiter:
+    instances:
+      backendA:
+        limitForPeriod: 2 # toi da 10 request/1s
+        limitRefreshPeriod: 10s # khoang thoi gian lam moi
+        timeoutDuration: 0 # thoi gian cho khi he thong day
+        registerHealthIndicator: true
+        eventConsumerBufferSize: 100 # bo nho dem
+      backendB:
+        limitForPeriod: 5
+        limitRefreshPeriod: 10s
+        timeoutDuration: 3s
+management:
+  health:
+    circuitbreakers:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include:
+          - '*'
+  endpoint:
+    health:
+      show-details: always
 
 spring:
   datasource:
