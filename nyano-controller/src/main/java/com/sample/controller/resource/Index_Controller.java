@@ -3,9 +3,11 @@ package com.sample.controller.resource;
 import com.sample.application.service.event.EventAppService;
 import com.sample.application.service.event.EventAppServiceRedis;
 import com.sample.application.cache.impl.RedisCache;
+import com.sample.application.service.reentrantlock.ReentrantLockService;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -18,13 +20,15 @@ public class Index_Controller {
     private final EventAppServiceRedis eventAppServiceRedis;
     private final RedisCache redisCache;
     private final RedissonClient redissonClient;
+    private final ReentrantLockService processApproval;
 
     public Index_Controller(EventAppService eventAppService, EventAppServiceRedis eventAppServiceRedis,
-                            RedisCache redisCache, RedissonClient redissonClient) {
+                            RedisCache redisCache, RedissonClient redissonClient, ReentrantLockService processApproval) {
         this.eventAppService = eventAppService;
         this.eventAppServiceRedis = eventAppServiceRedis;
         this.redisCache = redisCache;
         this.redissonClient = redissonClient;
+        this.processApproval = processApproval;
     }
 
     @GetMapping("/distributed")
@@ -65,5 +69,13 @@ public class Index_Controller {
             }
         }
         return data;
+    }
+
+
+    @GetMapping("/{approvalId}")
+    public String approve(@PathVariable String approvalId) {
+        String response = processApproval.processApproval(approvalId);
+        System.out.println("response ::%s" + response);
+        return response;
     }
 }

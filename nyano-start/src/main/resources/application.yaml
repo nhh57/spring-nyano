@@ -3,7 +3,7 @@ server:
 
 spring:
   datasource:
-    url: jdbc:mysql://${DB_HOST:10.56.66.54}:${DB_PORT:3306}/${DB_NAME:testdata}
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:testdata}
     username: ${DB_USERNAME:root}
     password: ${DB_PW:Admin123}
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -20,5 +20,5 @@ spring:
 
   data:
     redis:
-      host: 10.56.66.54
+      host: localhost
       port: 6379
