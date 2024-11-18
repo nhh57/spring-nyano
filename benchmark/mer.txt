@@ -1,0 +1,11 @@
+POST http://10.56.66.42:8080/v1/tqt/approve-import-tqt-files
+Accept: application/json
+Accept-Language: en-US,en;q=0.9,vi;q=0.8
+Connection: keep-alive
+Content-Type: application/json; charset=UTF-8
+Cookie: JSESSIONID=E1CE0D3C5396B80620135DFC33D516B0
+Origin: http://10.56.66.42:8080
+Referer: http://10.56.66.42:8080/tqt-approval
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36
+X-Requested-With: XMLHttpRequest
+@D:\Java\spring-nyano\benchmark\payload.json

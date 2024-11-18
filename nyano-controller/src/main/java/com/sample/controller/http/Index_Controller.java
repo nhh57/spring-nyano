@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.client.RestTemplate;
 
 import java.security.SecureRandom;
 import java.util.concurrent.TimeUnit;
@@ -23,22 +22,20 @@ public class Index_Controller {
     private final EventAppServiceRedis eventAppServiceRedis;
     private final RedissonClient redissonClient;
     private final ReentrantLockService processApproval;
-    private final RestTemplate restTemplate;
     private static final SecureRandom secureRandom = new SecureRandom();
 
     public Index_Controller(EventAppService eventAppService, EventAppServiceRedis eventAppServiceRedis,
-                            RedissonClient redissonClient, ReentrantLockService processApproval, RestTemplate restTemplate) {
+                            RedissonClient redissonClient, ReentrantLockService processApproval) {
         this.eventAppService = eventAppService;
         this.eventAppServiceRedis = eventAppServiceRedis;
         this.redissonClient = redissonClient;
         this.processApproval = processApproval;
-        this.restTemplate = restTemplate;
     }
 
     @GetMapping("/distributed")
     @RateLimiter(name = "backendB", fallbackMethod = "fallbackHello")
     public String index() {
-        Object key = "hainh";
+        String key = "hainh";
         String data = (String) eventAppServiceRedis.getSayHiRedis(key);
 
         if (data != null) {
@@ -94,7 +91,7 @@ public class Index_Controller {
     public String circuitBreaker() {
         int productId = secureRandom.nextInt(20) + 1;
         String url = "https://fakestoreapi.com/products/" + productId;
-        return restTemplate.getForObject(url, String.class);
+        return url;
     }
 
     public String fallbackCircuitBreaker(Throwable throwable) {

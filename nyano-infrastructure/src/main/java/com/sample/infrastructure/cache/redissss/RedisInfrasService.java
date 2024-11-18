@@ -1,5 +1,7 @@
 package com.sample.infrastructure.cache.redissss;
 
+import java.util.concurrent.TimeUnit;
+
 public interface RedisInfrasService {
     void setString(String key, String value);
 
@@ -9,4 +11,7 @@ public interface RedisInfrasService {
 
     <T> T getObject(String key, Class<T> clazz);
 
+     void put(String key, Object value, Long exp);
+
+     void put(String key, Object value, Long ttl, TimeUnit timeUnit);
 }

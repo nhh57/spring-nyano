@@ -1,26 +1,25 @@
 package com.sample.application.service.event.impl;
 
-import com.sample.application.cache.impl.RedisCache;
 import com.sample.application.service.event.EventAppServiceRedis;
+import com.sample.infrastructure.cache.redissss.RedisInfrasService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 
 public class EventAppServiceRedisImpl implements EventAppServiceRedis {
-    private final RedisCache redisCache;
+    @Autowired
+    private RedisInfrasService redisInfrasService;
 
-    public EventAppServiceRedisImpl(RedisCache redisCache) {
-        this.redisCache = redisCache;
-    }
 
     @Override
     public void saveSayHi(String who) {
-        Object key = "hainh";
-        redisCache.put(key, who,30L);
+        String key = "hainh";
+        redisInfrasService.put(key, who,30L);
     }
 
     @Override
-    public Object getSayHiRedis(Object key) {
-        return redisCache.get(key);
+    public String getSayHiRedis(String key) {
+        return redisInfrasService.getString(key);
     }
 }

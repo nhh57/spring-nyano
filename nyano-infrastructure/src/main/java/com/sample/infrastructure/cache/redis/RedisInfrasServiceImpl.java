@@ -12,12 +12,11 @@ import org.springframework.util.StringUtils;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @Slf4j
 public class RedisInfrasServiceImpl implements RedisInfrasService {
-    @Resource
-    private RedissonClient redissonClient;
     @Resource
     private RedisTemplate<String, Object> redisTemplate;
 
@@ -73,6 +72,24 @@ public class RedisInfrasServiceImpl implements RedisInfrasService {
             }
         }
         return null;
+    }
+
+    @Override
+    public void put(String key, Object value, Long exp) {
+        put(key, value, exp, TimeUnit.SECONDS);
+    }
+
+    /**
+     * Lưu trữ giá trị vào Redis với thời hạn hiệu lực.
+     *
+     * @param key      Khóa của giá trị
+     * @param value    Giá trị cần lưu trữ
+     * @param ttl      Thời hạn hiệu lực
+     * @param timeUnit Đơn vị thời gian cho thời hạn hiệu lực
+     */
+    @Override
+    public void put(String key, Object value, Long ttl, TimeUnit timeUnit) {
+        redisTemplate.opsForValue().set(key, value, ttl, timeUnit);
     }
 
 }

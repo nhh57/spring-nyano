@@ -23,7 +23,7 @@ public class IndexController {
 
     @GetMapping("")
     public String index() {
-        Object key = "hainh";
+        String key = "hainh";
         String data = "";
         data = (String) eventAppServiceRedis.getSayHiRedis(key);
 
