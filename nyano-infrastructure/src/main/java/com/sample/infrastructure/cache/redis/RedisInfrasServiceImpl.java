@@ -56,7 +56,7 @@ public class RedisInfrasServiceImpl implements RedisInfrasService {
         ObjectMapper mapper = new ObjectMapper();
         if (result instanceof Map) {
             try {
-                // Chuyển đổi LinkedHashMap thành dodois tượng mục tiêu
+                // Chuyển đổi LinkedHashMap thành đối tượng mục tiêu
                 return mapper.convertValue(result.toString(), clazz);
             } catch (IllegalArgumentException e) {
                 log.error("Error converting LinkedHashMap to object ::{}", e.getMessage());
@@ -76,6 +76,7 @@ public class RedisInfrasServiceImpl implements RedisInfrasService {
 
     @Override
     public void put(String key, Object value, Long exp) {
+        log.info("Put redis :: 1 {},{},{}", key, value, exp);
         put(key, value, exp, TimeUnit.SECONDS);
     }
 

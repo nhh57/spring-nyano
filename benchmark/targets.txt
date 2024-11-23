@@ -1,1 +1,1 @@
-GET http://localhost:1122/index
+GET http://localhost:1122/index/ticket/2

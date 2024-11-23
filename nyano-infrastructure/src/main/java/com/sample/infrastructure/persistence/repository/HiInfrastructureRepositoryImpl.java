@@ -2,7 +2,7 @@ package com.sample.infrastructure.persistence.repository;
 
 import com.sample.domain.model.HiDomainEntity;
 import com.sample.domain.repository.HiDomainRepository;
-import com.sample.infrastructure.persistence.mapper.HiInfrastructureJPA;
+import com.sample.infrastructure.persistence.mapper.jpa.HiInfrastructureJPA;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

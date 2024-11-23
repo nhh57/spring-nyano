@@ -1,6 +1,6 @@
 package com.sample.domain.service;
 
-import com.sample.domain.entity.TicketDetail;
+import com.sample.domain.model.TicketDetail;
 
 public interface TicketDetailDomainService {
     TicketDetail getTicketDetailByID(Long id);
