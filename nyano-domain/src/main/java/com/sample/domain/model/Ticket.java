@@ -1,23 +1,29 @@
 package com.sample.domain.model;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
 
 import java.util.Date;
 
-@Getter
-@Setter
-@Builder
-@ToString
+@Data
+@Accessors(chain = true)
+@NoArgsConstructor
+@AllArgsConstructor
+@Entity
 public class Ticket {
+
+    @Id
     private Long id;
+
     private String name;
-    private String desc;
+    private String description;
     private Date startTime;
     private Date endTime;
-    private Integer status;
+    private int status;
     private Date updatedAt;
     private Date createdAt;
 

@@ -11,7 +11,7 @@ scrape_configs:
   - job_name: "banvetau-springboot"
     scrape_interval: 5s
     static_configs:
-      - targets: [ "192.168.1.103:1122" ]
+      - targets: [ "10.56.66.52:1122" ]
     metrics_path: "/actuator/prometheus"
 
   - job_name: "banvetau-node-exporter"

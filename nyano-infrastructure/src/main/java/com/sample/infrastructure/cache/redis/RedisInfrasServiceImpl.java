@@ -2,10 +2,8 @@ package com.sample.infrastructure.cache.redis;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sample.infrastructure.cache.redissss.RedisInfrasService;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
-import org.redisson.api.RedissonClient;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -36,42 +34,61 @@ public class RedisInfrasServiceImpl implements RedisInfrasService {
 
     @Override
     public void setObject(String key, Object value) {
-        log.info("Set redis :: 1 {}", key);
-        if (StringUtils.hasLength(key)) {
+//        log.info("Set redis::1, {}", key);
+        if (!StringUtils.hasLength(key)) { // null or ''
+//            log.info("Set redis::null, {}", StringUtils.hasLength(key));
             return;
         }
+
         try {
             redisTemplate.opsForValue().set(key, value);
-        } catch (Exception e) {
-            log.error("setObject error::{}", e.getMessage());
+        }catch (Exception e){
+//            log.error("setObject error:{}",e.getMessage());
         }
+//        redisTemplate.opsForValue().set(key, value);
+//        // Kiểm tra xem giá trị có được lưu thành công hay không
+//        Object result = redisTemplate.opsForValue().get(key);
+//        log.info("Set redis::{}", result != null && result.equals(value));
     }
 
     @Override
-    public <T> T getObject(String key, Class<T> clazz) {
+    public <T> T getObject(String key, Class<T> targetClass) {
         Object result = redisTemplate.opsForValue().get(key);
-        log.info("get Cache::{}", result);
-        if (result == null) return null;
-        // Nếu kết quả là 1 LinkedHashMap
-        ObjectMapper mapper = new ObjectMapper();
+//        log.info("get Cache::{}", result);
+        if (result == null) {
+            return null;
+        }
+//        try {
+//            log.info("get Cache::1{}", JSON.parseObject((String) result, targetClass));
+//            return JSON.parseObject((String) result, targetClass);
+//        } catch (Exception e) {
+//            log.error("error Cache::{}", e);
+//            return null;
+//        }
+        // Nếu kết quả là một LinkedHashMap
         if (result instanceof Map) {
             try {
                 // Chuyển đổi LinkedHashMap thành đối tượng mục tiêu
-                return mapper.convertValue(result.toString(), clazz);
+                ObjectMapper objectMapper = new ObjectMapper();
+                return objectMapper.convertValue(result, targetClass);
             } catch (IllegalArgumentException e) {
-                log.error("Error converting LinkedHashMap to object ::{}", e.getMessage());
-            }
-        }
-        // Nếu result là String thực hiện chuyển đổi bình thường
-        if (result instanceof String) {
-            try {
-                return mapper.readValue((String) result, clazz);
-            } catch (JsonProcessingException e) {
-                log.error("Error deserializing JSON to object ::{}", e.getMessage());
+//                log.error("Error converting LinkedHashMap to object: {}", e.getMessage());
                 return null;
             }
         }
-        return null;
+
+        // Nếu result là String, thực hiện chuyển đổi bình thường
+        if (result instanceof String) {
+            try {
+                ObjectMapper objectMapper = new ObjectMapper();
+                return objectMapper.readValue((String) result, targetClass);
+            } catch (JsonProcessingException e) {
+//                log.error("Error deserializing JSON to object: {}", e.getMessage());
+                return null;
+            }
+        }
+
+        return null; // hoặc ném ra một ngoại lệ tùy ý
     }
 
     @Override

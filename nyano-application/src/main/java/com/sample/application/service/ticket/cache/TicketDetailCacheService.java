@@ -1,8 +1,7 @@
 package com.sample.application.service.ticket.cache;
-
 import com.sample.domain.model.TicketDetail;
 import com.sample.domain.service.TicketDetailDomainService;
-import com.sample.infrastructure.cache.redissss.RedisInfrasService;
+import com.sample.infrastructure.cache.redis.RedisInfrasService;
 import com.sample.infrastructure.distributed.redisson.RedisDistributedLocker;
 import com.sample.infrastructure.distributed.redisson.RedisDistributedService;
 import lombok.extern.slf4j.Slf4j;
@@ -15,67 +14,96 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class TicketDetailCacheService {
     @Autowired
-    private RedisInfrasService redisInfrasService;
-    @Autowired
     private RedisDistributedService redisDistributedService;
+    @Autowired // Khai bao cache
+    private RedisInfrasService redisInfrasService;
     @Autowired
     private TicketDetailDomainService ticketDetailDomainService;
 
-    public TicketDetail getTicketDefaultCacheVip(Long id, Long version) {
 
-        log.info("Impl getEventItemCacheVip->,{}, {}", id, version);
-        TicketDetail ticketDetail = redisInfrasService.getObject(getEventItemKey(id), TicketDetail.class);
+
+    public TicketDetail getTicketDefaultCacheNormal(Long id, Long version) {
+        // 1. get ticket item by redis
+        TicketDetail ticketDetail = redisInfrasService.getObject(genEventItemKey(id), TicketDetail.class);
+        // 2. YES -> Hit cache
         if (ticketDetail != null) {
-            log.info("FROM CACHE EXIST {}", ticketDetail);
+//            log.info("FROM CACHE {}, {}, {}", id, version, ticketDetail);
             return ticketDetail;
         }
-        log.info("CACHE NO EXIST, START GET DB AND SET CACHE ->, {}, {}", id, version);
-        // tao lock process voi key
-        RedisDistributedLocker locker = redisDistributedService.getDistributedLock("PRO_TICKET_KEY_ITEM" + id);
-        try {
-            // 1 tạo Lock
-            boolean isLock = locker.tryLock(1, 5, TimeUnit.SECONDS);
-            // Lưu ý: Cho dù thành công hay không cũng phải unlock , bằng mọi giá
-            // Lưu ý: Cho dù thành công hay không cũng phải unlock , bằng mọi giá
-            // Lưu ý: Cho dù thành công hay không cũng phải unlock , bằng mọi giá
+        // 3. If NO --> Missing cache
 
+        // 4. Get data from DBS
+        ticketDetail = ticketDetailDomainService.getTicketDetailById(id);
+//        log.info("FROM DBS {}, {}, {}", id, version, ticketDetail);
+
+        // 5. check ticketitem
+        if (ticketDetail != null) { // Nói sau khi code xong: Code nay co van de -> Gia su ticketItem lay ra tu dbs null thi sao, query mãi
+            // 6. set cache
+            redisInfrasService.setObject(genEventItemKey(id), ticketDetail);
+        }
+        return ticketDetail;
+    }
+
+    // CHƯA VIP LẮM - KHI HỌ REVIEW CODE - SẼ BẮT VIẾT LẠI
+    public TicketDetail getTicketDefaultCacheVip(Long id, Long version) {
+//        TicketDetail ticketDetail = ticketDetailDomainService.getTicketDetailById(id);
+        TicketDetail ticketDetail = redisInfrasService.getObject(genEventItemKey(id), TicketDetail.class);
+        // show log: cache item
+//        log.info("CACHE {}, {}, {}", id, version, ticketDetail);
+        // 2. YES
+        if (ticketDetail != null) {
+            log.info("FROM CACHE EXIST {}",ticketDetail);
+            return ticketDetail;
+        }
+//        log.info("CACHE NO EXIST, START GET DB AND SET CACHE->, {}, {} ", id, version);
+        // Tao lock process voi KEY
+        RedisDistributedLocker locker = redisDistributedService.getDistributedLock("PRO_LOCK_KEY_ITEM"+id);
+        try {
+            // 1 - Tao lock
+            boolean isLock = locker.tryLock(1, 5, TimeUnit.SECONDS);
+            // Lưu ý: Cho dù thành công hay không cũng phải unLock, bằng mọi giá.
+            // Lưu ý: Cho dù thành công hay không cũng phải unLock, bằng mọi giá.
+            // Lưu ý: Cho dù thành công hay không cũng phải unLock, bằng mọi giá.
             if (!isLock) {
-                log.info("CACHE WAIT ITEM PLEASE ...{}", version);
+//                log.info("LOCK WAIT ITEM PLEASE....{}", version);
                 return ticketDetail;
             }
-            // GET cache
-            log.info("GET CACHE");
-            ticketDetail = redisInfrasService.getObject(getEventItemKey(id), TicketDetail.class);
-            //2. YES
+            // stub...
+            // Get cache
+            ticketDetail = redisInfrasService.getObject(genEventItemKey(id), TicketDetail.class);
+            // 2. YES
             if (ticketDetail != null) {
-                log.info("FROM CACHE EXIST {}, {}, {}", id, version, ticketDetail);
+//                log.info("FROM CACHE NGON A {}, {}, {}", id, version, ticketDetail);
                 return ticketDetail;
             }
-            // 3 -> vẫn không có thì truy vấn dbs
-            ticketDetail = ticketDetailDomainService.getTicketDetailByID(id);
-            log.info("FROM DBS->>> {}, {}", ticketDetail, version);
-            if (ticketDetail == null) { // Neu trong dbs van khong co thif return ve not exits;
-                log.info("TICKET NOT EXISTS...{}", version);
+            // 3 -> van khong co thi truy van DB
+
+            ticketDetail = ticketDetailDomainService.getTicketDetailById(id);
+//            log.info("FROM DBS ->>>> {}, {}", ticketDetail, version);
+            if (ticketDetail == null) { // Neu trong dbs van khong co thi return ve not exists;
+//                log.info("TICKET NOT EXITS....{}", version);
                 // set
-                redisInfrasService.put(getEventItemKey(id), ticketDetail,5L); // TTL
+                redisInfrasService.setObject(genEventItemKey(id), ticketDetail);
                 return ticketDetail;
             }
 
             // neu co thi set redis
-            redisInfrasService.setObject(getEventItemKey(id), ticketDetail);
+            redisInfrasService.setObject(genEventItemKey(id), ticketDetail); // TTL
+            // set luon local
             return ticketDetail;
+
+            // OK XONG, chung ta review code nay ok ... ddau vaof DDD thoi nao
         } catch (Exception e) {
             throw new RuntimeException(e);
-        } finally {
-            // Lưu ý: Cho dù thành công hay không cũ phải unlock, bằng mọi giá
-            // Lưu ý: Cho dù thành công hay không cũ phải unlock, bằng mọi giá
-            // Lưu ý: Cho dù thành công hay không cũ phải unlock, bằng mọi giá
+        }finally {
+            // Lưu ý: Cho dù thành công hay không cũng phải unLock, bằng mọi giá.
+            // Lưu ý: Cho dù thành công hay không cũng phải unLock, bằng mọi giá.
+            // Lưu ý: Cho dù thành công hay không cũng phải unLock, bằng mọi giá.
             locker.unlock();
         }
     }
 
-
-    private String getEventItemKey(Long item) {
-        return "PRO_TICKET:ITEM:" + item;
+    private String genEventItemKey(Long itemId) {
+        return "PRO_TICKET:ITEM:" + itemId;
     }
 }

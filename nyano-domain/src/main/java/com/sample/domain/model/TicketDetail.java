@@ -1,33 +1,36 @@
 package com.sample.domain.model;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
 
-import java.math.BigDecimal;
-import java.time.Instant;
 import java.util.Date;
 
-@Getter
-@Setter
-@Builder
-@ToString
+@Data
+@Accessors(chain = true)
+@NoArgsConstructor
+@AllArgsConstructor
+@Entity
+@Table(name = "ticket_item")
 public class TicketDetail {
+
+    @Id
     private Long id;
     private String name;
     private String description;
-    private Integer stockInitial;
-    private Integer stockAvailable;
-    private Boolean isStockPrepared = false;
-    private BigDecimal priceOriginal;
-    private BigDecimal priceFlash;
+    private int stockInitial;
+    private int stockAvailable;
+    private boolean isStockPrepared;
+    private Long priceOriginal;
+    private Long priceFlash;
     private Date saleStartTime;
     private Date saleEndTime;
-    private Integer status;
-    private Integer activityId;
+    private int status;
+    private Long activityId;
     private Date updatedAt;
     private Date createdAt;
-
-
 }

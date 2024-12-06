@@ -12,7 +12,7 @@ public class RedissonConfig {
     @Bean
     public RedissonClient redissonClient() {
         Config config = new Config();
-        config.useSingleServer().setAddress("redis://localhost:6379").setDatabase(0);
+        config.useSingleServer().setAddress("redis://10.56.66.54:6379").setDatabase(0);
         return Redisson.create(config);
     }
 }
