@@ -29,15 +29,15 @@ public class TicketDetailCacheService {
     private TicketDetailDomainService ticketDetailDomainService;
     @Autowired
     private RedissonClient redissonClient;
-    private static final Cache<Long, TicketDetail> ticketDetailLocalCache = CacheBuilder.newBuilder()
-            .initialCapacity(10) // 10 item trong cache
+    private static final Cache<Long, TicketDetail> ticketDetailLocalCache = CacheBuilder.newBuilder().initialCapacity(10) // 10 item trong cache
             .concurrencyLevel(7) // cpu
             .expireAfterWrite(1, TimeUnit.MINUTES) // thoi gian het han cuoi cung
             .build();
 
     private static final String CACHE_INVALIDATION_TOPIC = "ticket_detail_cache_invalidation";
 
-
+    @Value("${spring.application.name}")
+    private String intances;
 //    public TicketDetail getTicketDefaultCacheNormal(Long id, Long version) {
 //        // 1. get ticket item by redis
 //        TicketDetail ticketDetail = redisInfrasService.getObject(genEventItemKey(id), TicketDetail.class);
@@ -173,7 +173,7 @@ public class TicketDetailCacheService {
                 redisInfrasService.setObject(genEventItemKey(id), ticketDetail);
                 ticketDetailLocalCache.put(id, null); // set item to local cache
                 log.info("FROM DBS NOT EXIST {}", ticketDetail);
-                updateCache(id);
+                updateCache(id,version);
                 return ticketDetail;
             }
 
@@ -181,7 +181,7 @@ public class TicketDetailCacheService {
             redisInfrasService.setObject(genEventItemKey(id), ticketDetail); // TTL
             ticketDetailLocalCache.put(id, ticketDetail); // set item to local cache
             log.info("FROM DBS CACHE EXIST {}", ticketDetail);
-            updateCache(id);
+            updateCache(id,version);
             // set luon local
             return ticketDetail;
 
@@ -202,10 +202,29 @@ public class TicketDetailCacheService {
     @PostConstruct
     public void subscribeToCacheInvalidation() {
         RTopic topic = redissonClient.getTopic(CACHE_INVALIDATION_TOPIC);
-        topic.addListener(Long.class, (channel, ticketId) -> {
-            log.info("Received cache invalidation event for ticket ID: {}", ticketId);
+        topic.addListener(String.class, (channel, message) -> {
+            // Phân tích thông điệp nhận được từ Redis Pub/Sub
+            String[] parts = message.split(":");
+            if (parts.length != 2) {
+                log.warn("Invalid cache invalidation message format: {}", message);
+                return;
+            }
+
+            String senderIdentifier = parts[0];  // Identifier của instance phát sự kiện
+            log.info("Processing cache invalidation event for ticket ID: {}", senderIdentifier);
+            Long ticketId = Long.parseLong(parts[1]);  // ID của ticket bị invalidate
+
+            // Kiểm tra nếu event đến từ chính instance
+            if (senderIdentifier.equals(intances)) {
+                log.info("Ignoring cache invalidation event for ticket ID: {} from self instance: {}", ticketId, senderIdentifier);
+                return;
+            }
+
+            // Nếu không phải từ chính mình, thực hiện invalidate local cache
+            log.info("Processing cache invalidation event for ticket ID: {} from instance: {}", ticketId, senderIdentifier);
             invalidateLocalCache(ticketId);
         });
+
         log.info("Subscribed to Redis Pub/Sub channel: {}", CACHE_INVALIDATION_TOPIC);
     }
 
@@ -247,15 +266,26 @@ public class TicketDetailCacheService {
      * Cập nhật dữ liệu cache local và Redis, sau đó publish sự kiện
      */
 
-    public void updateCache(Long id) {
-        log.info("Update cache for ticket ID: {}", id);
+    public void updateCache(Long id, Long version) {
+        // Lấy phiên bản của instance (ví dụ như UUID, Instance ID, hoặc Redis Node ID)
+
+
+        // Log thông tin phiên bản và ID của ticket
+        log.info("[{}] Update cache for ticket ID: {}", intances, id);
+        String message = intances + ":" + id;
         // Phát sự kiện invalidate lên Redis Pub/Sub
         RTopic topic = redissonClient.getTopic(CACHE_INVALIDATION_TOPIC);
-        topic.publish(id);
+        topic.publish(message);  // Gửi ID của ticket vào Redis để thông báo invalidate cache
 
-        log.info("Cache update event published for ticket ID: {}", id);
+        // Log thông báo đã phát sự kiện
+        log.info("[{}] Cache update event published for ticket ID: {}", intances, id);
     }
 
+
+//    public String getInstanceVersion(Long version) {
+//        String instanceId = intances;  // Ví dụ: lấy từ môi trường hoặc cấu hình
+//        return instanceId + "_" + version;
+//    }
 
     private String genEventItemKey(Long itemId) {
         return "PRO_TICKET:ITEM:" + itemId;
