@@ -29,7 +29,7 @@ services:
   #Redis
   redis:
     container_name: pre-event-redis
-    image: redis:latest
+    image: redis:6.2
     platform: linux/amd64
     ports:
       - "6319:6379"
@@ -63,7 +63,7 @@ services:
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
       - GF_USERS_ALLOW_SING_UP=false
-      - GF_SERVER_DOMAIN=localhost
+      - GF_SERVER_DOMAIN=192.168.1.103
       #enable logger
       - GF_LOG_MODE=console file
       - GF_LOG_FILTERS=alerting.notifier.slack:debug alermanager:debug ngalert:debug
@@ -107,7 +107,7 @@ services:
       - '--collect.perf_schema.eventsstatements'
       - '--collect.perf_schema.indexiowaits'
       - '--collect.global_status'
-#      - '--ignore-tables'
+      #      - '--ignore-tables'
       - '--config.my-cnf=/etc/mysql/.my.cnf'
     volumes:
       - ./mysqld-exporter/.my.cnf:/etc/mysql/.my.cnf
@@ -135,7 +135,7 @@ services:
       - "9200:9200"
       - "9300:9300"
     environment:
-      ES_JAVA_OPTS: "Xmx-256m -Xms256"
+      ES_JAVA_OPTS: "-Xmx256m -Xms256m"
       discovery.type: single-node
     networks:
       - pre-event-member-mysql
@@ -152,7 +152,7 @@ services:
       - "5022:5000/udp"
       - "9600:9600"
     environment:
-      ES_JAVA_OPTS: "Xmx-256m -Xms256"
+      ES_JAVA_OPTS: "-Xmx256m -Xms256m"
     networks:
       - pre-event-member-mysql
 
@@ -167,3 +167,31 @@ services:
       - pre-event-member-mysql
     depends_on:
       - elasticsearch
+
+  vetautet-service:
+    image: spring-nyano:v1.0.0
+    container_name: spring-nyano
+    ports:
+      - "1122:1122"
+    environment:
+      APP_NAME: vetautet-1
+    networks:
+      - pre-event-member-mysql
+    depends_on:
+      - mysql
+      - redis
+      - logstash
+
+  vetautet-service2:
+    image: spring-nyano:v1.0.0
+    container_name: spring-nyano2
+    ports:
+      - "1123:1122"
+    environment:
+      APP_NAME: vetautet-2
+    networks:
+      - pre-event-member-mysql
+    depends_on:
+      - mysql
+      - redis
+      - logstash

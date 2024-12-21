@@ -61,7 +61,7 @@ services:
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
       - GF_USERS_ALLOW_SING_UP=false
-      - GF_SERVER_DOMAIN=localhost
+      - GF_SERVER_DOMAIN=192.168.1.103
       #enable logger
       - GF_LOG_MODE=console file
       - GF_LOG_FILTERS=alerting.notifier.slack:debug alermanager:debug ngalert:debug

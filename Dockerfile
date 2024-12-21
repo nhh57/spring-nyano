@@ -1,4 +1,6 @@
-FROM openjdk:17-jdk-alpine3.13 AS build
+#mvn clean install -DskipTests; docker rm -f spring-nyano; docker rmi -f spring-nyano:v1.0.0;docker build --no-cache -t spring-nyano:v1.0.0 .;docker run -d -p 1122:1122 --name spring-nyano spring-nyano:v1.0.0
+
+FROM amazoncorretto:21-alpine AS build
 RUN apk add --no-cache binutils
 WORKDIR /opt
 

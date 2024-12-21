@@ -35,3 +35,4 @@ build/
 /environment/data/prometheus_data/
 /environment/grafana-storage/
 /environment/data/
+/benchmark/
