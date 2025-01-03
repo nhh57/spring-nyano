@@ -13,7 +13,7 @@ public class RedissonConfig {
     public RedissonClient redissonClient() {
         Config config = new Config();
         config.useSingleServer()
-                .setAddress("redis://192.168.1.103:6319")
+                .setAddress("redis://10.56.66.52:6319")
                 .setDatabase(0);
         config.setCodec(new JsonJacksonCodec());  // Dùng codec Jackson thay vì MarshallingCodec
         return Redisson.create(config);
