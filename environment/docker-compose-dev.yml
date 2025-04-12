@@ -201,6 +201,9 @@ services:
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
     container_name: demo_kafka-ui
+    depends_on:
+      kafka:
+        condition: service_healthy
     environment:
       KAFKA_CLUSTERS_0_NAME: local
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: demo_kafka:9092
